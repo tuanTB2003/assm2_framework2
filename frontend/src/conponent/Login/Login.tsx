@@ -1,25 +1,49 @@
-import React, { useState } from 'react'
-// import { useLoginMutation } from '../../api/auth'
+import { Form, Input, message } from 'antd';
+import { useLoginMutation } from '../../api/auth';
+import { useAppDispatch, useAppSelector } from '../../app/hook';
+import { signin } from '../../Slices/Auth';
+import { useNavigate } from 'react-router-dom';
 
 
+type FieldType = {
+  email?: string;
+  password?: string;
+  remember?: string;
+};
 
 const Login12 = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [Login] = useLoginMutation()
+  const data = useAppSelector(state => state.user)
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // const newUser = {
-    //   email: email,
-    //   password: password,
-    // };
-    if (email === 'user@example.com' && password === '123456') {
-      console.log('Đăng nhập thành công!');
-    } else {
-      alert('Email hoặc mật khẩu không chính xác!');
+  const onFinish = async (values: any) => {
+    console.log('Success:', values);
+    try {
+      const data: any = await Login(values);
+
+      const dataUser = {
+        accessToken: data?.data?.accessToken,
+        ...data?.data?.user
+      }
+      if (data?.error) {
+        console.log(data)
+        return message.error(data?.error?.data?.message || 'error')
+      }
+      dispatch(signin(dataUser))
+      message.success("Đăng nhập thành công")
+      setTimeout(() => {
+        navigate('/')
+      }, 1000);
+    } catch (error) {
+
+      console.log(error);
     }
   };
 
+  const onFinishFailed = (errorInfo: any) => {
+    console.log('Failed:', errorInfo);
+  };
   return (
     <div className="pb-24 mt-16">
       <div className="container">
@@ -35,9 +59,58 @@ const Login12 = () => {
               <div>
                 <div id="login" className="custom-tab-content">
                   <div className="p-8 md:p-20 shadow max-w-4xl mx-auto">
-                    <form action="#" method="post" onSubmit={handleLogin}>
-                      <input className="border border-solid border-gray-300 w-full py-1 px-5 mb-5 placeholder-current text-dark h-12 focus:outline-none text-base" type="text" name="user-name" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-                      <input className="border border-solid border-gray-300 w-full py-1 px-5 mb-5 placeholder-current text-dark h-12 focus:outline-none text-base" type="password" name="user-password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+                    <Form
+                      name="basic"
+                      labelCol={{ span: 8 }}
+                      wrapperCol={{ span: 16 }}
+                      style={{ maxWidth: 600 }}
+                      initialValues={{ remember: true }}
+                      onFinish={onFinish}
+                      onFinishFailed={onFinishFailed}
+                      autoComplete="off"
+                    >
+                      <Form.Item
+                        name="email"
+                        label="Email"
+                        rules={[
+                          {
+                            type: 'email',
+                            message: 'The input is not valid E-mail!',
+                          },
+                          {
+                            required: true,
+                            message: 'Please input your E-mail!',
+                          },
+                        ]}
+                      >
+                        <Input />
+                      </Form.Item>
+
+                      <Form.Item<FieldType>
+                        label="Password"
+                        name="password"
+                        rules={[{ required: true, message: 'Please input your password!' }]}
+                      >
+                        <Input.Password />
+                      </Form.Item>
+                      {/* 
+                      <Form.Item<FieldType>
+                        name="remember"
+                        valuePropName="checked"
+                        wrapperCol={{ offset: 8, span: 16 }}
+                      >
+                        <Checkbox>Remember me</Checkbox>
+                      </Form.Item> */}
+
+                      <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+                        <button type="submit" className="rounded-lg inline-block leading-none uppercase text-white text-sm bg-dark px-4 py-3 transition-all hover:bg-orange">
+                          <span>Login</span>
+                        </button>
+                      </Form.Item>
+                    </Form>
+                    {/* <form action="#" method="post" >
+                      <input className="border border-solid border-gray-300 w-full py-1 px-5 mb-5 placeholder-current text-dark h-12 focus:outline-none text-base" type="text" name="user-name" placeholder="Email" />
+                      <input className="border border-solid border-gray-300 w-full py-1 px-5 mb-5 placeholder-current text-dark h-12 focus:outline-none text-base" type="password" name="user-password" placeholder="Password" />
                       <div className="button-box">
                         <div className="mb-4">
                           <input id="remember" type="checkbox" />
@@ -50,7 +123,7 @@ const Login12 = () => {
                         </a>
                       </div>
 
-                    </form>
+                    </form> */}
 
                   </div>
 
